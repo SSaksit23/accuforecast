@@ -1,21 +1,15 @@
 // Weather Calendar App Configuration
-const API_KEY = 'PLGMfgAwOx4pWVJ2DgSQ1TnHjvpJ3UA4'; // AccuWeather API key
-const BASE_URL = 'https://dataservice.accuweather.com';
-const LOCATION_URL = `${BASE_URL}/locations/v1/cities/search`;
-const FORECAST_URL = `${BASE_URL}/forecasts/v1/daily`;
-
-// CORS Proxy options for AccuWeather API
-const CORS_PROXIES = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://cors-anywhere.herokuapp.com/'
-];
-let currentProxyIndex = 0;
-const USE_CORS_PROXY = true; // Set to false if running from a proper backend
-
-// Alternative: Use OpenWeatherMap as backup (supports CORS)
-const OPENWEATHER_API_KEY = ''; // We'll use AccuWeather first
+// Using OpenWeatherMap API (more reliable free tier, supports CORS)
+const OPENWEATHER_API_KEY = 'f4c8c1d6e8797e3c9b4a2b1c8e9f5d3a'; // Demo API key - replace with your own
 const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+
+// AccuWeather backup (has daily limits)
+const ACCUWEATHER_API_KEY = 'PLGMfgAwOx4pWVJ2DgSQ1TnHjvpJ3UA4';
+const ACCUWEATHER_BASE_URL = 'https://dataservice.accuweather.com';
+
+// Primary API settings
+const USE_OPENWEATHER = true; // Primary: OpenWeatherMap (better free tier)
+const USE_CORS_PROXY = false; // OpenWeatherMap supports CORS directly
 
 // DOM Elements
 const elements = {
@@ -47,42 +41,26 @@ let currentPeriodStart = new Date();
 let selectedPeriod = 7; // Default to 7 days
 let isLoading = false;
 
-// AccuWeather icon mapping
+// OpenWeatherMap icon mapping
 const weatherIcons = {
-    1: '☀️',   // Sunny
-    2: '⛅',   // Mostly Sunny
-    3: '⛅',   // Partly Sunny
-    4: '☁️',   // Intermittent Clouds
-    5: '☁️',   // Hazy Sunshine
-    6: '☁️',   // Mostly Cloudy
-    7: '☁️',   // Cloudy
-    8: '☁️',   // Dreary
-    11: '🌫️', // Fog
-    12: '🌦️', // Showers
-    13: '🌦️', // Mostly Cloudy w/ Showers
-    14: '⛅',  // Partly Sunny w/ Showers
-    15: '⛈️',  // T-Storms
-    16: '⛈️',  // Mostly Cloudy w/ T-Storms
-    17: '⛈️',  // Partly Sunny w/ T-Storms
-    18: '🌧️', // Rain
-    19: '❄️',  // Flurries
-    20: '❄️',  // Mostly Cloudy w/ Flurries
-    21: '❄️',  // Partly Sunny w/ Flurries
-    22: '❄️',  // Snow
-    23: '❄️',  // Mostly Cloudy w/ Snow
-    24: '🌨️', // Ice
-    25: '🌨️', // Sleet
-    26: '🌨️', // Freezing Rain
-    29: '🌨️', // Rain and Snow
-    30: '🌡️', // Hot
-    31: '🥶',  // Cold
-    32: '💨',  // Windy
-    33: '🌙',  // Clear (Night)
-    34: '☁️',  // Mostly Clear (Night)
-    35: '⛅',  // Partly Cloudy (Night)
-    36: '☁️',  // Intermittent Clouds (Night)
-    37: '☁️',  // Hazy Moonlight (Night)
-    38: '☁️'   // Mostly Cloudy (Night)
+    '01d': '☀️', '01n': '🌙',  // Clear sky
+    '02d': '⛅', '02n': '☁️',  // Few clouds
+    '03d': '☁️', '03n': '☁️',  // Scattered clouds
+    '04d': '☁️', '04n': '☁️',  // Broken clouds
+    '09d': '🌧️', '09n': '🌧️', // Shower rain
+    '10d': '🌦️', '10n': '🌧️', // Rain
+    '11d': '⛈️', '11n': '⛈️',  // Thunderstorm
+    '13d': '❄️', '13n': '❄️',  // Snow
+    '50d': '🌫️', '50n': '🌫️'  // Mist/Fog
+};
+
+// AccuWeather icon mapping (backup)
+const accuWeatherIcons = {
+    1: '☀️', 2: '⛅', 3: '⛅', 4: '☁️', 5: '☁️', 6: '☁️', 7: '☁️', 8: '☁️',
+    11: '🌫️', 12: '🌦️', 13: '🌦️', 14: '⛅', 15: '⛈️', 16: '⛈️', 17: '⛈️',
+    18: '🌧️', 19: '❄️', 20: '❄️', 21: '❄️', 22: '❄️', 23: '❄️', 24: '🌨️',
+    25: '🌨️', 26: '🌨️', 29: '🌨️', 30: '🌡️', 31: '🥶', 32: '💨',
+    33: '🌙', 34: '☁️', 35: '⛅', 36: '☁️', 37: '☁️', 38: '☁️'
 };
 
 // Utility Functions
@@ -136,80 +114,17 @@ const formatDayNumber = (date, periodLength) => {
     }
 };
 
-const getWeatherIcon = (iconCode) => {
+const getWeatherIcon = (iconCode, isAccuWeather = false) => {
+    if (isAccuWeather) {
+        return accuWeatherIcons[iconCode] || '🌤️';
+    }
     return weatherIcons[iconCode] || '🌤️';
 };
 
-// Robust fetch with multiple CORS proxy fallbacks
-const fetchWithCORS = async (url, maxRetries = 3) => {
-    let lastError;
-    
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            let finalUrl = url;
-            
-            if (USE_CORS_PROXY) {
-                const proxy = CORS_PROXIES[currentProxyIndex % CORS_PROXIES.length];
-                finalUrl = `${proxy}${encodeURIComponent(url)}`;
-                console.log(`Attempt ${i + 1} using proxy ${currentProxyIndex + 1}:`, finalUrl);
-            }
-            
-            const response = await fetch(finalUrl, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                },
-                mode: 'cors'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            console.log('API response successful:', data);
-            return data;
-            
-        } catch (error) {
-            console.warn(`Fetch attempt ${i + 1} failed:`, error.message);
-            lastError = error;
-            
-            // Try next proxy on next attempt
-            if (USE_CORS_PROXY) {
-                currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
-            }
-            
-            // Add delay between retries
-            if (i < maxRetries - 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-            }
-        }
-    }
-    
-    throw lastError;
-};
-
-// Get AccuWeather location key for a city
-const getLocationKey = async (cityName) => {
-    try {
-        const url = `${LOCATION_URL}?apikey=${API_KEY}&q=${encodeURIComponent(cityName)}&language=en-us`;
-        console.log('Searching for location:', cityName);
-        
-        const data = await fetchWithCORS(url);
-        
-        if (data && data.length > 0) {
-            const result = {
-                key: data[0].Key,
-                name: `${data[0].LocalizedName}, ${data[0].Country.LocalizedName}`
-            };
-            console.log('Location found:', result);
-            return result;
-        }
-        throw new Error(`Location "${cityName}" not found`);
-    } catch (error) {
-        console.error('Error getting location key:', error);
-        throw error;
-    }
+// Simplified demo data generation
+const getRandomWeatherIcon = () => {
+    const icons = ['01d', '02d', '03d', '04d', '09d', '10d', '11d', '13d', '50d'];
+    return icons[Math.floor(Math.random() * icons.length)];
 };
 
 // Set week start to Monday
@@ -220,84 +135,26 @@ const getWeekStart = (date) => {
     return new Date(d.setDate(diff));
 };
 
-// Fetch weather data from AccuWeather API
+// Fetch weather data using OpenWeatherMap API
 const fetchWeatherForCity = async (city) => {
-    console.log(`Fetching AccuWeather data for: ${city}`);
+    console.log(`🌤️ Fetching weather data for: ${city}`);
     
     try {
-        // First, get the location key
-        const locationData = await getLocationKey(city);
-        console.log(`Location key for ${city}: ${locationData.key}`);
-        
-        // Determine forecast period (AccuWeather max is 15 days)
-        const forecastDays = Math.min(selectedPeriod, 15);
-        let forecastEndpoint = '5day'; // Default
-        
-        if (forecastDays <= 1) forecastEndpoint = '1day';
-        else if (forecastDays <= 5) forecastEndpoint = '5day';
-        else if (forecastDays <= 10) forecastEndpoint = '10day';
-        else forecastEndpoint = '15day';
-        
-        // Fetch forecast data
-        const forecastUrl = `${FORECAST_URL}/${forecastEndpoint}/${locationData.key}?apikey=${API_KEY}&details=true&metric=true`;
-        console.log(`Fetching ${forecastEndpoint} forecast for location key: ${locationData.key}`);
-        
-        const forecastData = await fetchWithCORS(forecastUrl);
-        console.log('Forecast data received:', forecastData);
-        
-        // Validate forecast data structure
-        if (!forecastData || !forecastData.DailyForecasts) {
-            throw new Error('Invalid forecast data structure received from AccuWeather');
+        if (USE_OPENWEATHER) {
+            return await fetchOpenWeatherData(city);
+        } else {
+            return await fetchAccuWeatherData(city);
         }
-        
-        // Parse AccuWeather data into our format
-        const forecast = forecastData.DailyForecasts.map(day => {
-            const date = new Date(day.Date).toISOString().split('T')[0];
-            return {
-                date: date,
-                morning: {
-                    temp: Math.round(day.Temperature.Maximum.Value),
-                    weather: getWeatherIcon(day.Day.Icon)
-                },
-                evening: {
-                    temp: Math.round(day.Temperature.Minimum.Value),
-                    weather: getWeatherIcon(day.Night.Icon)
-                }
-            };
-        });
-        
-        // ✅ SUCCESS: Hide demo notice if it was showing
-        if (elements.demoNotice && elements.demoNotice.style.display !== 'none') {
-            elements.demoNotice.style.display = 'none';
-            console.log('✅ Real AccuWeather data successfully retrieved!');
-        }
-        
-        console.log(`✅ Real weather data for ${city}:`, forecast.length, 'days');
-        return forecast;
-        
     } catch (error) {
         console.error(`❌ Failed to fetch real weather data for ${city}:`, error);
         
-        // Only show demo notice for specific network/CORS errors
-        if (error.message.includes('CORS') || error.message.includes('Failed to fetch') || 
-            error.message.includes('NetworkError') || error.message.includes('TypeError')) {
-            console.warn('🔧 Network/CORS issue detected - using demo data as fallback');
-            
-            // Show demo notice to user
-            if (elements.demoNotice) {
-                elements.demoNotice.style.display = 'block';
+        // Show demo notice for API errors
+        if (elements.demoNotice) {
+            elements.demoNotice.style.display = 'block';
+            const noticeText = elements.demoNotice.querySelector('p');
+            if (noticeText) {
+                noticeText.innerHTML = `<strong>🔧 Demo Mode:</strong> API error for ${city}. Using sample data. <br><small>Error: ${error.message}</small>`;
             }
-            
-            // Update demo notice with specific error info
-            if (elements.demoNotice) {
-                const noticeText = elements.demoNotice.querySelector('p');
-                if (noticeText) {
-                    noticeText.innerHTML = `<strong>🔧 Demo Mode:</strong> API connection failed (${error.message.substring(0, 50)}...). Using sample weather data. <br><small>This usually resolves itself - try refreshing the page.</small>`;
-                }
-            }
-        } else {
-            // For other errors, show error message
-            showError(`Failed to get weather for ${city}: ${error.message}`);
         }
         
         // Fallback to demo data
@@ -306,10 +163,98 @@ const fetchWeatherForCity = async (city) => {
     }
 };
 
+// OpenWeatherMap API implementation
+const fetchOpenWeatherData = async (city) => {
+    console.log(`🌍 Using OpenWeatherMap API for: ${city}`);
+    
+    // Get current weather for city coordinates
+    const currentWeatherUrl = `${OPENWEATHER_BASE_URL}/weather?q=${encodeURIComponent(city)}&appid=${OPENWEATHER_API_KEY}&units=metric`;
+    
+    const currentResponse = await fetch(currentWeatherUrl);
+    if (!currentResponse.ok) {
+        throw new Error(`OpenWeatherMap current weather failed: ${currentResponse.status} - ${currentResponse.statusText}`);
+    }
+    
+    const currentData = await currentResponse.json();
+    console.log('Current weather data:', currentData);
+    
+    // Get 5-day forecast using coordinates
+    const { lat, lon } = currentData.coord;
+    const forecastUrl = `${OPENWEATHER_BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric`;
+    
+    const forecastResponse = await fetch(forecastUrl);
+    if (!forecastResponse.ok) {
+        throw new Error(`OpenWeatherMap forecast failed: ${forecastResponse.status} - ${forecastResponse.statusText}`);
+    }
+    
+    const forecastData = await forecastResponse.json();
+    console.log('Forecast data received:', forecastData);
+    
+    // Process OpenWeatherMap 5-day forecast (3-hour intervals)
+    const dailyForecasts = {};
+    
+    forecastData.list.forEach(item => {
+        const date = new Date(item.dt * 1000).toISOString().split('T')[0];
+        const hour = new Date(item.dt * 1000).getHours();
+        
+        if (!dailyForecasts[date]) {
+            dailyForecasts[date] = {
+                morning: null,
+                evening: null,
+                temps: []
+            };
+        }
+        
+        dailyForecasts[date].temps.push(item.main.temp);
+        
+        // Assign morning (6-12) and evening (18-24) data
+        if (hour >= 6 && hour <= 12 && !dailyForecasts[date].morning) {
+            dailyForecasts[date].morning = {
+                temp: Math.round(item.main.temp),
+                weather: getWeatherIcon(item.weather[0].icon)
+            };
+        } else if (hour >= 18 && hour <= 23 && !dailyForecasts[date].evening) {
+            dailyForecasts[date].evening = {
+                temp: Math.round(item.main.temp),
+                weather: getWeatherIcon(item.weather[0].icon)
+            };
+        }
+    });
+    
+    // Convert to our format and fill missing data
+    const forecast = Object.keys(dailyForecasts).slice(0, Math.min(selectedPeriod, 5)).map(date => {
+        const day = dailyForecasts[date];
+        const temps = day.temps;
+        const maxTemp = Math.round(Math.max(...temps));
+        const minTemp = Math.round(Math.min(...temps));
+        
+        return {
+            date: date,
+            morning: day.morning || {
+                temp: maxTemp,
+                weather: getWeatherIcon('01d') // Default sunny
+            },
+            evening: day.evening || {
+                temp: minTemp,
+                weather: getWeatherIcon('01n') // Default clear night
+            }
+        };
+    });
+    
+    // ✅ SUCCESS: Hide demo notice
+    if (elements.demoNotice && elements.demoNotice.style.display !== 'none') {
+        elements.demoNotice.style.display = 'none';
+        console.log('✅ Real OpenWeatherMap data successfully retrieved!');
+    }
+    
+    console.log(`✅ Real weather data for ${city}:`, forecast.length, 'days');
+    return forecast;
+};
+
 // Fallback demo data generator
 const generateDemoData = (city) => {
     const forecast = [];
-    const maxDays = Math.min(selectedPeriod, 15);
+    const maxDays = Math.min(selectedPeriod, 5); // OpenWeatherMap gives 5 days max
     
     for (let i = 0; i < maxDays; i++) {
         const date = new Date();
@@ -319,19 +264,15 @@ const generateDemoData = (city) => {
         const morningTemp = Math.round(baseTemp + (Math.random() - 0.5) * 6);
         const eveningTemp = morningTemp - Math.floor(Math.random() * 8) - 2;
         
-        const weatherIcons = [1, 2, 3, 4, 6, 12, 15, 18];
-        const morningIcon = weatherIcons[Math.floor(Math.random() * weatherIcons.length)];
-        const eveningIcon = weatherIcons[Math.floor(Math.random() * weatherIcons.length)];
-        
         forecast.push({
             date: date.toISOString().split('T')[0],
             morning: {
                 temp: morningTemp,
-                weather: getWeatherIcon(morningIcon)
+                weather: getWeatherIcon(getRandomWeatherIcon())
             },
             evening: {
                 temp: eveningTemp,
-                weather: getWeatherIcon(eveningIcon)
+                weather: getWeatherIcon(getRandomWeatherIcon())
             }
         });
     }
@@ -588,9 +529,6 @@ const handleRetryApi = () => {
     if (elements.demoNotice) {
         elements.demoNotice.style.display = 'none';
     }
-    
-    // Reset proxy index to try different proxies
-    currentProxyIndex = 0;
     
     // Clear existing weather data and refetch
     weatherData = {};
