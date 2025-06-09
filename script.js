@@ -1,15 +1,20 @@
 // Weather Calendar App Configuration
-// Using OpenWeatherMap API (more reliable free tier, supports CORS)
-const OPENWEATHER_API_KEY = 'f4c8c1d6e8797e3c9b4a2b1c8e9f5d3a'; // Demo API key - replace with your own
-const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+// API keys are now loaded from config.js (not committed to git)
 
-// AccuWeather backup (has daily limits)
-const ACCUWEATHER_API_KEY = 'PLGMfgAwOx4pWVJ2DgSQ1TnHjvpJ3UA4';
-const ACCUWEATHER_BASE_URL = 'https://dataservice.accuweather.com';
+// Check if config is loaded
+if (!window.WEATHER_CONFIG) {
+    console.error('⚠️ Configuration not loaded! Please ensure config.js exists.');
+    console.log('📋 Copy config.example.js to config.js and add your API keys.');
+}
 
-// Primary API settings
-const USE_OPENWEATHER = true; // Primary: OpenWeatherMap (better free tier)
-const USE_CORS_PROXY = false; // OpenWeatherMap supports CORS directly
+// Configuration from external file (keeps API keys private)
+const CONFIG = window.WEATHER_CONFIG || {};
+const OPENWEATHER_API_KEY = CONFIG.OPENWEATHER_API_KEY || 'demo_key';
+const OPENWEATHER_BASE_URL = CONFIG.OPENWEATHER_BASE_URL || 'https://api.openweathermap.org/data/2.5';
+const ACCUWEATHER_API_KEY = CONFIG.ACCUWEATHER_API_KEY || 'demo_key';
+const ACCUWEATHER_BASE_URL = CONFIG.ACCUWEATHER_BASE_URL || 'https://dataservice.accuweather.com';
+const USE_OPENWEATHER = CONFIG.USE_OPENWEATHER !== undefined ? CONFIG.USE_OPENWEATHER : true;
+const USE_CORS_PROXY = CONFIG.USE_CORS_PROXY !== undefined ? CONFIG.USE_CORS_PROXY : false;
 
 // DOM Elements
 const elements = {

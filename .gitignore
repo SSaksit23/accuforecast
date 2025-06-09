@@ -16,6 +16,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# API Configuration (contains sensitive keys)
+config.js
+
 # IDE files
 .vscode/
 .idea/
