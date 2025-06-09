@@ -1,0 +1,853 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #4f46e5;
+    --secondary-color: #7c3aed;
+    --accent-color: #06b6d4;
+    --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --card-background: rgba(255, 255, 255, 0.95);
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-light: #ffffff;
+    --border-color: rgba(255, 255, 255, 0.2);
+    --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-heavy: 0 20px 25px rgba(0, 0, 0, 0.15);
+    --border-radius: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: var(--background-gradient);
+    min-height: 100vh;
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Header Styles */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.app-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.app-title i {
+    font-size: 2.2rem;
+    color: #fbbf24;
+}
+
+/* App Layout */
+.app-layout {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* City Management Panel */
+.city-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.panel-card {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--shadow-heavy);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.cities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.cities-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.clear-all-btn {
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: #ef4444;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-all-btn:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+}
+
+.panel-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0;
+}
+
+.cities-counter {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(79, 70, 229, 0.1);
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.add-city-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+.city-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.8);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.city-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.city-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.add-btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary-color);
+    color: var(--text-light);
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-btn:hover {
+    background: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.loading-section,
+.error-section {
+    text-align: center;
+    padding: 16px;
+}
+
+.loading-spinner {
+    color: var(--accent-color);
+    font-size: 1.2rem;
+}
+
+.error-text {
+    font-family: 'Poppins', sans-serif;
+    color: #ef4444;
+    font-size: 0.9rem;
+}
+
+.cities-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border-radius: 8px;
+}
+
+.cities-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cities-list-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.cities-list-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.cities-list-container::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+.cities-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+}
+
+.city-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.city-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateX(4px);
+}
+
+.city-name {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.remove-btn {
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #ef4444;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+/* Calendar Panel */
+.calendar-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.calendar-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.calendar-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.period-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card-background);
+    padding: 12px 16px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    backdrop-filter: blur(10px);
+}
+
+.period-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.period-select {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.period-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: white;
+}
+
+.period-select:hover {
+    background: white;
+}
+
+.calendar-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--card-background);
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    backdrop-filter: blur(10px);
+}
+
+.nav-btn {
+    background: var(--primary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.nav-btn:hover {
+    background: var(--secondary-color);
+    transform: scale(1.05);
+}
+
+.calendar-range {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 120px;
+    text-align: center;
+}
+
+.calendar-container {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    box-shadow: var(--shadow-heavy);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.calendar-grid {
+    display: grid;
+    gap: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.calendar-grid.week-view {
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-grid.month-view {
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-grid.extended-view {
+    grid-template-columns: repeat(10, 1fr);
+}
+
+.calendar-day {
+    background: white;
+    min-height: 130px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.calendar-day.many-cities {
+    min-height: 160px;
+}
+
+.calendar-day.compact-mode {
+    min-height: 110px;
+    padding: 6px;
+}
+
+.extended-view .calendar-day {
+    min-height: 110px;
+    padding: 6px;
+}
+
+.extended-view .weather-entry {
+    font-size: 0.65rem;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+}
+
+.extended-view .day-number {
+    font-size: 0.75rem;
+    line-height: 1.1;
+}
+
+.calendar-day.header {
+    background: var(--primary-color);
+    color: var(--text-light);
+    min-height: auto;
+    padding: 12px 8px;
+    font-weight: 600;
+    text-align: center;
+    justify-content: center;
+}
+
+.day-number {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.day-weather {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+
+.day-weather.many-cities {
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.day-weather.many-cities::-webkit-scrollbar {
+    width: 3px;
+}
+
+.day-weather.many-cities::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+.day-weather.many-cities::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.weather-entry {
+    background: rgba(79, 70, 229, 0.1);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+}
+
+.weather-city {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 2px;
+}
+
+.weather-temps {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-secondary);
+}
+
+.calendar-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 15px;
+    background: white;
+}
+
+.calendar-loading i {
+    font-size: 2rem;
+    color: var(--accent-color);
+}
+
+.calendar-loading p {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Forecast Section */
+.forecast-section {
+    margin-bottom: 30px;
+}
+
+.forecast-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.forecast-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.forecast-placeholder {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+}
+
+.forecast-placeholder i {
+    font-size: 3rem;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.forecast-placeholder p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+.forecast-card {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+    box-shadow: var(--shadow-light);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.forecast-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-medium);
+}
+
+.forecast-day {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.forecast-icon {
+    font-size: 2.5rem;
+    color: #fbbf24;
+    margin: 15px 0;
+}
+
+.forecast-temps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.forecast-high {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.forecast-low {
+    color: var(--text-secondary);
+}
+
+.forecast-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-spinner {
+    text-align: center;
+    color: var(--text-light);
+}
+
+.loading-spinner i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+}
+
+.loading-spinner p {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Error Modal */
+.error-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.error-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.error-content {
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    padding: 30px;
+    text-align: center;
+    max-width: 400px;
+    margin: 20px;
+    box-shadow: var(--shadow-heavy);
+    backdrop-filter: blur(10px);
+}
+
+.error-content i {
+    font-size: 3rem;
+    color: #ef4444;
+    margin-bottom: 15px;
+}
+
+.error-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 15px;
+}
+
+.error-content p {
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.error-close-btn {
+    background: var(--primary-color);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.error-close-btn:hover {
+    background: var(--secondary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .city-panel {
+        order: 2;
+    }
+    
+    .calendar-panel {
+        order: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .app-title {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .calendar-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .calendar-controls {
+        align-items: center;
+        width: 100%;
+    }
+    
+    .period-selector {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .calendar-navigation {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .calendar-container {
+        padding: 16px;
+    }
+    
+    .calendar-day {
+        min-height: 110px;
+        padding: 6px;
+    }
+    
+    .day-number {
+        font-size: 0.8rem;
+        margin-bottom: 3px;
+    }
+    
+    .weather-entry {
+        font-size: 0.7rem;
+        padding: 3px 5px;
+    }
+    
+    .panel-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .weather-card {
+        padding: 20px;
+    }
+    
+    .temperature {
+        font-size: 2.5rem;
+    }
+    
+    .weather-icon {
+        font-size: 2.5rem;
+    }
+    
+    .description {
+        font-size: 1.2rem;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.weather-card,
+.forecast-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+} 

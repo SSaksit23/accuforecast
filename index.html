@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="app-title">
+                <i class="fas fa-cloud-sun"></i>
+                Weather Forecast
+            </h1>
+        </header>
+
+        <main class="main-content">
+            <div class="app-layout">
+                <!-- Left Panel: City Management -->
+                <aside class="city-panel">
+                    <div class="panel-card">
+                        <h2 class="panel-title">Add City</h2>
+                        <form class="add-city-form" id="addCityForm">
+                            <div class="input-group">
+                                <input type="text" id="cityInput" placeholder="Enter a city name..." class="city-input">
+                                <button type="submit" class="add-btn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="cities-header">
+                            <h2 class="panel-title">Managed Cities</h2>
+                            <div class="cities-actions">
+                                <span class="cities-counter" id="citiesCounter">0 cities</span>
+                                <button class="clear-all-btn" id="clearAllBtn" title="Remove all cities" style="display: none;">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="loading-section" id="loadingSection" style="display: none;">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                        <div class="error-section" id="errorSection" style="display: none;">
+                            <p class="error-text" id="errorText"></p>
+                        </div>
+                        <div class="cities-list-container">
+                            <ul class="cities-list" id="citiesList">
+                                <!-- Cities will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Right Panel: Weather Calendar -->
+                <section class="calendar-panel">
+                    <div class="calendar-header">
+                        <h2 class="calendar-title" id="calendarTitle">Weather Calendar</h2>
+                        
+                        <div class="calendar-controls">
+                            <!-- Forecast Period Selector -->
+                            <div class="period-selector">
+                                <label for="forecastPeriod" class="period-label">Forecast Period:</label>
+                                <select id="forecastPeriod" class="period-select">
+                                    <option value="5">5 Days</option>
+                                    <option value="7">7 Days</option>
+                                    <option value="10">10 Days</option>
+                                    <option value="15">15 Days</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Navigation Controls -->
+                            <div class="calendar-navigation">
+                                <button id="prevPeriod" class="nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="calendar-range" id="calendarRange">Loading...</span>
+                                <button id="nextPeriod" class="nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-notice" id="demoNotice" style="display: none; background: #fff3cd; border: 1px solid #ffeaa7; padding: 12px; margin: 10px 0; border-radius: 8px; font-size: 14px;">
+                        <p style="margin: 0;"><strong>🔧 Demo Mode:</strong> Using sample weather data due to CORS limitations. Real AccuWeather data requires a backend server.</p>
+                    </div>
+                    
+                    <div class="calendar-container">
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- Calendar will be populated by JavaScript -->
+                            <div class="calendar-loading">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading weather calendar...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading weather data...</p>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div class="error-modal" id="errorModal">
+            <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error</h3>
+                <p id="errorMessage">Something went wrong. Please try again.</p>
+                <button id="closeErrorBtn" class="error-close-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
