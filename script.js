@@ -4,9 +4,18 @@ const BASE_URL = 'https://dataservice.accuweather.com';
 const LOCATION_URL = `${BASE_URL}/locations/v1/cities/search`;
 const FORECAST_URL = `${BASE_URL}/forecasts/v1/daily`;
 
-// CORS Proxy for AccuWeather API (since AccuWeather doesn't support CORS)
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// CORS Proxy options for AccuWeather API
+const CORS_PROXIES = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://cors-anywhere.herokuapp.com/'
+];
+let currentProxyIndex = 0;
 const USE_CORS_PROXY = true; // Set to false if running from a proper backend
+
+// Alternative: Use OpenWeatherMap as backup (supports CORS)
+const OPENWEATHER_API_KEY = ''; // We'll use AccuWeather first
+const OPENWEATHER_BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 // DOM Elements
 const elements = {
@@ -27,7 +36,8 @@ const elements = {
     errorModal: document.getElementById('errorModal'),
     errorMessage: document.getElementById('errorMessage'),
     closeErrorBtn: document.getElementById('closeErrorBtn'),
-    demoNotice: document.getElementById('demoNotice')
+    demoNotice: document.getElementById('demoNotice'),
+    retryApiBtn: document.getElementById('retryApiBtn')
 };
 
 // State Management
@@ -130,33 +140,72 @@ const getWeatherIcon = (iconCode) => {
     return weatherIcons[iconCode] || '🌤️';
 };
 
+// Robust fetch with multiple CORS proxy fallbacks
+const fetchWithCORS = async (url, maxRetries = 3) => {
+    let lastError;
+    
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            let finalUrl = url;
+            
+            if (USE_CORS_PROXY) {
+                const proxy = CORS_PROXIES[currentProxyIndex % CORS_PROXIES.length];
+                finalUrl = `${proxy}${encodeURIComponent(url)}`;
+                console.log(`Attempt ${i + 1} using proxy ${currentProxyIndex + 1}:`, finalUrl);
+            }
+            
+            const response = await fetch(finalUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                mode: 'cors'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('API response successful:', data);
+            return data;
+            
+        } catch (error) {
+            console.warn(`Fetch attempt ${i + 1} failed:`, error.message);
+            lastError = error;
+            
+            // Try next proxy on next attempt
+            if (USE_CORS_PROXY) {
+                currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
+            }
+            
+            // Add delay between retries
+            if (i < maxRetries - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+        }
+    }
+    
+    throw lastError;
+};
+
 // Get AccuWeather location key for a city
 const getLocationKey = async (cityName) => {
     try {
-        let url = `${LOCATION_URL}?apikey=${API_KEY}&q=${encodeURIComponent(cityName)}&language=en-us`;
+        const url = `${LOCATION_URL}?apikey=${API_KEY}&q=${encodeURIComponent(cityName)}&language=en-us`;
+        console.log('Searching for location:', cityName);
         
-        // Use CORS proxy if needed
-        if (USE_CORS_PROXY) {
-            url = `${CORS_PROXY}${encodeURIComponent(url)}`;
-        }
-        
-        console.log('Location search URL:', url);
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`Location search failed: ${response.status} - ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Location search response:', data);
+        const data = await fetchWithCORS(url);
         
         if (data && data.length > 0) {
-            return {
+            const result = {
                 key: data[0].Key,
                 name: `${data[0].LocalizedName}, ${data[0].Country.LocalizedName}`
             };
+            console.log('Location found:', result);
+            return result;
         }
-        throw new Error('Location not found');
+        throw new Error(`Location "${cityName}" not found`);
     } catch (error) {
         console.error('Error getting location key:', error);
         throw error;
@@ -190,21 +239,10 @@ const fetchWeatherForCity = async (city) => {
         else forecastEndpoint = '15day';
         
         // Fetch forecast data
-        let forecastUrl = `${FORECAST_URL}/${forecastEndpoint}/${locationData.key}?apikey=${API_KEY}&details=true&metric=true`;
+        const forecastUrl = `${FORECAST_URL}/${forecastEndpoint}/${locationData.key}?apikey=${API_KEY}&details=true&metric=true`;
+        console.log(`Fetching ${forecastEndpoint} forecast for location key: ${locationData.key}`);
         
-        // Use CORS proxy if needed
-        if (USE_CORS_PROXY) {
-            forecastUrl = `${CORS_PROXY}${encodeURIComponent(forecastUrl)}`;
-        }
-        
-        console.log('Forecast URL:', forecastUrl);
-        const forecastResponse = await fetch(forecastUrl);
-        
-        if (!forecastResponse.ok) {
-            throw new Error(`AccuWeather API error: ${forecastResponse.status} - ${forecastResponse.statusText}`);
-        }
-        
-        const forecastData = await forecastResponse.json();
+        const forecastData = await fetchWithCORS(forecastUrl);
         console.log('Forecast data received:', forecastData);
         
         // Validate forecast data structure
@@ -228,22 +266,42 @@ const fetchWeatherForCity = async (city) => {
             };
         });
         
+        // ✅ SUCCESS: Hide demo notice if it was showing
+        if (elements.demoNotice && elements.demoNotice.style.display !== 'none') {
+            elements.demoNotice.style.display = 'none';
+            console.log('✅ Real AccuWeather data successfully retrieved!');
+        }
+        
+        console.log(`✅ Real weather data for ${city}:`, forecast.length, 'days');
         return forecast;
         
     } catch (error) {
-        console.error(`Error fetching weather for ${city}:`, error);
+        console.error(`❌ Failed to fetch real weather data for ${city}:`, error);
         
-        // Show user-friendly message about API issues
-        if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
-            console.warn('CORS/Network issue detected - using demo data');
+        // Only show demo notice for specific network/CORS errors
+        if (error.message.includes('CORS') || error.message.includes('Failed to fetch') || 
+            error.message.includes('NetworkError') || error.message.includes('TypeError')) {
+            console.warn('🔧 Network/CORS issue detected - using demo data as fallback');
+            
             // Show demo notice to user
             if (elements.demoNotice) {
                 elements.demoNotice.style.display = 'block';
             }
+            
+            // Update demo notice with specific error info
+            if (elements.demoNotice) {
+                const noticeText = elements.demoNotice.querySelector('p');
+                if (noticeText) {
+                    noticeText.innerHTML = `<strong>🔧 Demo Mode:</strong> API connection failed (${error.message.substring(0, 50)}...). Using sample weather data. <br><small>This usually resolves itself - try refreshing the page.</small>`;
+                }
+            }
+        } else {
+            // For other errors, show error message
+            showError(`Failed to get weather for ${city}: ${error.message}`);
         }
         
-        // Fallback to demo data if API fails
-        console.log(`Using demo data for ${city} due to API error: ${error.message}`);
+        // Fallback to demo data
+        console.log(`📊 Using demo data for ${city} due to: ${error.message}`);
         return generateDemoData(city);
     }
 };
@@ -523,6 +581,22 @@ const handleClearAllCities = () => {
     }
 };
 
+const handleRetryApi = () => {
+    console.log('🔄 User manually retrying API calls...');
+    
+    // Hide demo notice
+    if (elements.demoNotice) {
+        elements.demoNotice.style.display = 'none';
+    }
+    
+    // Reset proxy index to try different proxies
+    currentProxyIndex = 0;
+    
+    // Clear existing weather data and refetch
+    weatherData = {};
+    fetchWeatherForAllCities();
+};
+
 // Initialize the app
 const initializeApp = () => {
     // Set up event listeners
@@ -531,6 +605,7 @@ const initializeApp = () => {
     elements.prevPeriod.addEventListener('click', handlePrevPeriod);
     elements.nextPeriod.addEventListener('click', handleNextPeriod);
     elements.clearAllBtn.addEventListener('click', handleClearAllCities);
+    elements.retryApiBtn.addEventListener('click', handleRetryApi);
     
     // Set current period start to beginning of current week
     currentPeriodStart = getWeekStart(new Date());
